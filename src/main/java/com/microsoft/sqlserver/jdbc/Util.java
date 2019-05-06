@@ -10,6 +10,11 @@ import java.math.BigInteger;
 import java.net.IDN;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.Certificate;
 import java.text.DecimalFormat;
 import java.text.MessageFormat;
 import java.util.Date;
@@ -1027,6 +1032,7 @@ final class Util {
     interface RealmValidator {
         boolean isRealmValid(String realm);
     }
+
     private static RealmValidator validator;
 
     /**
@@ -1152,6 +1158,59 @@ final class Util {
                     con.currentConnectPlaceHolder.getPortNumber());
         }
         return enrichSpnWithRealm(spn, null == userSuppliedServerSpn);
+    }
+
+    static byte[] MD5(final byte[] str) {
+        MessageDigest md;
+        try {
+            md = MessageDigest.getInstance("MD5");
+            md.reset();
+            md.update(str);
+            return md.digest();
+        } catch (NoSuchAlgorithmException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * tls-server-end-point channel binding type "tls-server-end-point:"
+     */
+    private static final byte[] TLS_SERVER_END_POINT_CHANNEL_BINDING = {0x74, 0x6c, 0x73, 0x2d, 0x73, 0x65, 0x72, 0x76,
+            0x65, 0x72, 0x2d, 0x65, 0x6e, 0x64, 0x2d, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x3a};
+
+    static byte[] generateChannelBinding(final SQLServerConnection con) {
+        byte[] cert = null;
+        try {
+            if (null != con.tdsChannel.sslSocket) {
+                Certificate[] certs = con.tdsChannel.sslSocket.getSession().getPeerCertificates();
+                if (null != certs) {
+                    cert = certs[0].getEncoded();
+                }
+                MessageDigest md = MessageDigest.getInstance("SHA-256");
+                md.update(cert);
+                byte[] hash = md.digest();
+
+                ByteBuffer cb = ByteBuffer.allocate(20 + TLS_SERVER_END_POINT_CHANNEL_BINDING.length + hash.length)
+                        .order(ByteOrder.LITTLE_ENDIAN);
+
+                cb.putInt(0); // initiator_addrtype
+                cb.putInt(0); // initiator_address length
+                cb.putInt(0); // acceptor_addrtype
+                cb.putInt(0); // acceptor_addrtype
+                cb.putInt(hash.length + TLS_SERVER_END_POINT_CHANNEL_BINDING.length); // application data length
+
+                cb.put(TLS_SERVER_END_POINT_CHANNEL_BINDING, 0, TLS_SERVER_END_POINT_CHANNEL_BINDING.length);
+                cb.put(hash, 0, hash.length);
+                return MD5(cb.array());
+            }
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return null;
     }
 }
 

@@ -5,10 +5,11 @@
 
 package com.microsoft.sqlserver.jdbc;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.InvalidKeyException;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.MessageFormat;
 import java.time.Instant;
@@ -220,10 +221,14 @@ final class NTLMAuthentication extends SSPIAuthentication {
     // Windows epoch time difference from Unix epoch time in secs
     private static final long WINDOWS_EPOCH_DIFF = 11644473600L;
 
+
     /**
      * NTLM Client Context
      */
     private class NTLMContext {
+
+        private final SQLServerConnection connection;
+
         // domain name to connect to
         private final String domainName;
         private final byte[] domainUbytes;
@@ -257,6 +262,9 @@ final class NTLMAuthentication extends SSPIAuthentication {
         // server challenge from Challenge msg
         private byte[] serverChallenge = new byte[NTLM_SERVER_CHALLENGE_LENGTH];
 
+        InetAddress initAddr = null;
+        InetAddress acceptAddr = null;
+
         /**
          * Section 3.1.5.1.2 Client Receives a CHALLENGE_MESSAGE from the Server
          * 
@@ -279,6 +287,8 @@ final class NTLMAuthentication extends SSPIAuthentication {
         NTLMContext(final SQLServerConnection con, final String domainName, final String userName,
                 final String password, final String workstation) throws SQLServerException {
 
+            this.connection = con;
+
             this.domainName = null != domainName ? domainName.toUpperCase()
                                                  : SQLServerDriverStringProperty.DOMAIN.getDefaultValue();
             this.domainUbytes = unicode(this.domainName);
@@ -290,8 +300,19 @@ final class NTLMAuthentication extends SSPIAuthentication {
 
             this.workstation = workstation;
 
-            String spn = null != con ? Util.getSpn(con) : null;
+           // String spn = null != con ? Util.getSpn(con) : null;
+            String spn = "MSSQLSvc/SQL-2K16-01.galaxy.ad";
+          //  String spn = "MSSQLSvc/SQL-2K12-EP.galaxy.ad";
+
             this.spnUbytes = null != spn ? unicode(spn) : null;
+
+            try {
+                this.initAddr = InetAddress.getLocalHost();
+                this.acceptAddr = InetAddress.getByName(con.currentConnectPlaceHolder.getServerName());
+            } catch (UnknownHostException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
 
             try {
                 mac = Mac.getInstance("HmacMD5");
@@ -521,12 +542,15 @@ final class NTLMAuthentication extends SSPIAuthentication {
         time.putLong((TimeUnit.SECONDS.toNanos(Instant.now().getEpochSecond() + WINDOWS_EPOCH_DIFF)) / 100);
         byte[] currentTime = time.array();
 
+        byte[] channelBinding = Util.generateChannelBinding(context.connection);
+        int channelBindingLen = (null != channelBinding) ? channelBinding.length : 0;
+
         // allocate token buffer
         ByteBuffer token = ByteBuffer
                 .allocate(NTLM_CLIENT_CHALLENGE_RESPONSE_TYPE.length + NTLM_CLIENT_CHALLENGE_RESERVED1.length
                         + NTLM_CLIENT_CHALLENGE_RESERVED2.length + currentTime.length + NTLM_CLIENT_NONCE_LENGTH
                         + NTLM_CLIENT_CHALLENGE_RESERVED3.length + context.targetInfo.length + NTLM_AVP_LENGTH
-                        + NTLM_AVP_LENGTH + context.spnUbytes.length + NTLM_AVP_LENGTH + NTLM_CHANNELBINDINGS_LENGTH)
+                        + NTLM_AVP_LENGTH + context.spnUbytes.length + NTLM_AVP_LENGTH + channelBindingLen)
                 .order(ByteOrder.LITTLE_ENDIAN);
 
         token.put(NTLM_CLIENT_CHALLENGE_RESPONSE_TYPE);
@@ -559,12 +583,16 @@ final class NTLMAuthentication extends SSPIAuthentication {
             token.putShort((short) context.spnUbytes.length);
             token.put(context.spnUbytes, 0, context.spnUbytes.length);
 
-            // channel binding
-            byte[] channelBinding = new byte[NTLM_CHANNELBINDINGS_LENGTH];
-            token.putShort(NTLM_AVID_MSVCHANNELBINDINGS);
-            token.putShort((short) NTLM_CHANNELBINDINGS_LENGTH);
-            token.put(MD5(channelBinding), 0, NTLM_CHANNELBINDINGS_LENGTH);
-
+            // channel binding          
+            if (null != channelBinding) {
+                token.putShort(NTLM_AVID_MSVCHANNELBINDINGS);
+                token.putShort((short) channelBindingLen);
+                
+                System.out.println("adding channel binding");
+                
+                token.put(channelBinding, 0, channelBindingLen);
+            }
+            
             // EOL
             token.putShort(NTLM_AVID_MSVAVEOL);
             token.putShort((short) 0);
@@ -572,6 +600,8 @@ final class NTLMAuthentication extends SSPIAuthentication {
 
         return token.array();
     }
+
+
 
     /**
      * Gets the HMAC MD5 hash
@@ -601,20 +631,6 @@ final class NTLMAuthentication extends SSPIAuthentication {
         md.reset();
         md.update(str);
         return md.digest();
-    }
-
-    private byte[] MD5(final byte[] str) {
-        MessageDigest md;
-        try {
-            md = MessageDigest.getInstance("MD5");
-            md.reset();
-            md.update(str);
-            return md.digest();
-        } catch (NoSuchAlgorithmException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        return null;
     }
 
     /**

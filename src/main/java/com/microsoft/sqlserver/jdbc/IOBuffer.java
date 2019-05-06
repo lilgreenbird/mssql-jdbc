@@ -578,7 +578,7 @@ final class TDSChannel implements Serializable {
     private Socket tcpSocket;
 
     // Socket for SSL-encrypted communications with SQL Server
-    private SSLSocket sslSocket;
+    SSLSocket sslSocket;
 
     /*
      * Socket providing the communications interface to the driver. For SSL-encrypted connections, this is the SSLSocket

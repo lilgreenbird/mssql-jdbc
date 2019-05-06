@@ -51,7 +51,7 @@ final class KerbAuthentication extends SSPIAuthentication {
         try {
             // If we need to support NTLM as well, we can use null
             // Kerberos OID
-            Oid kerberos = new Oid("1.2.840.113554.1.2.2");
+            Oid kerberos = null; //new Oid("1.2.840.113554.1.2.2");
             // http://blogs.sun.com/harcey/entry/of_java_kerberos_and_access
             // We pass null to indicate that the system should interpret the SPN
             // as it is.

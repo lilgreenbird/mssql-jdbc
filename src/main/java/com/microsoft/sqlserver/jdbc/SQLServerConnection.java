@@ -962,7 +962,7 @@ public class SQLServerConnection implements ISQLServerConnection, java.io.Serial
         return tdsPacketSize;
     }
 
-    private TDSChannel tdsChannel;
+    TDSChannel tdsChannel;
 
     private TDSCommand currentCommand = null;
 
