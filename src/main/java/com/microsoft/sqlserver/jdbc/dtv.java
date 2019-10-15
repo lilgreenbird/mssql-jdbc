@@ -4175,7 +4175,7 @@ final class ServerDTVImpl extends DTVImpl {
 
         if (!(0 <= hundredNanosSinceMidnight && hundredNanosSinceMidnight < Nanos.PER_DAY / 100)) {
             MessageFormat form = new MessageFormat(SQLServerException.getErrString("R_NormalizationErrorAE"));
-            throw new SQLServerException(form.format(new Object[] {baseSSType}), null, 0, null);
+            throw new SQLServerException(form.format(new Object[] {baseSSType, hundredNanosSinceMidnight}), null, 0, null);
         }
 
         return 100 * hundredNanosSinceMidnight;

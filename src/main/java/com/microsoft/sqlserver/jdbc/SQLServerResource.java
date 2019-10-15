@@ -327,7 +327,7 @@ public final class SQLServerResource extends ListResourceBundle {
                             + "{2}. Please verify key store provider information in column master key definitions in the database, and verify all custom key store providers "
                             + "used in your application are registered properly."},
             {"R_UnsupportedDataTypeAE", "Encryption and decryption of data type {0} is not supported."},
-            {"R_NormalizationErrorAE", "Decryption of the data type {0} failed. Normalization error."},
+            {"R_NormalizationErrorAE", "Decryption of the data type {0} failed. Normalization error. hundredNanosSinceMidnight={1}"},
             {"R_UnsupportedNormalizationVersionAE",
                     "Normalization version \"{0}\" received from SQL Server is either invalid or corrupted. Valid normalization versions are: {1}."},
             {"R_NullCipherTextAE", "Internal error. Ciphertext value cannot be null."},
