@@ -48,7 +48,6 @@ enum RowType {
  * Defines the Top-level JDBC ResultSet implementation.
  */
 public class SQLServerResultSet implements ISQLServerResultSet, java.io.Serializable {
-
     /**
      * Always refresh SerialVersionUID when prompted
      */
@@ -57,6 +56,8 @@ public class SQLServerResultSet implements ISQLServerResultSet, java.io.Serializ
     /** Generate the statement's logging ID */
     private static final AtomicInteger lastResultSetID = new AtomicInteger(0);
     private final String traceID;
+
+    boolean allowInternalUpdate = false;
 
     private static int nextResultSetID() {
         return lastResultSetID.incrementAndGet();
@@ -489,7 +490,7 @@ public class SQLServerResultSet implements ISQLServerResultSet, java.io.Serializ
     }
 
     private void verifyResultSetIsScrollable() throws SQLException {
-        if (isForwardOnly())
+        if (!allowInternalUpdate && isForwardOnly())
             throwNotScrollable();
     }
 
@@ -505,7 +506,7 @@ public class SQLServerResultSet implements ISQLServerResultSet, java.io.Serializ
     }
 
     private void verifyResultSetIsUpdatable() throws SQLServerException {
-        if (CONCUR_READ_ONLY == stmt.resultSetConcurrency || 0 == serverCursorId)
+        if (!allowInternalUpdate && (CONCUR_READ_ONLY == stmt.resultSetConcurrency || 0 == serverCursorId))
             throwNotUpdatable();
     }
 
@@ -2628,7 +2629,7 @@ public class SQLServerResultSet implements ISQLServerResultSet, java.io.Serializ
         loggerExternal.exiting(getClassNameLogging(), "getTimestamp", value);
         return value;
     }
-    
+
     LocalDateTime getLocalDateTime(int columnIndex) throws SQLServerException {
         loggerExternal.entering(getClassNameLogging(), "getLocalDateTime", columnIndex);
         checkClosed();
@@ -3066,7 +3067,7 @@ public class SQLServerResultSet implements ISQLServerResultSet, java.io.Serializ
         verifyValidColumnIndex(index);
 
         // Verify that the column is updatable (i.e. that it is not a computed column).
-        if (!columns[index - 1].isUpdatable()) {
+        if (!allowInternalUpdate && !columns[index - 1].isUpdatable()) {
             SQLServerException.makeFromDriverError(stmt.connection, stmt,
                     SQLServerException.getErrString("R_cantUpdateColumn"), "07009", false);
         }
