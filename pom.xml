@@ -121,7 +121,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
-			<artifactId>bcprov-jdk15on</artifactId>
+			<artifactId>bcprov-jdk14</artifactId>
 			<version>${bouncycastle.bcprov.version}</version>
 			<optional>true</optional>
 		</dependency>
@@ -129,7 +129,7 @@
 		<!-- dependencies for Client Certificate Authentication -->
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
-			<artifactId>bcpkix-jdk15on</artifactId>
+			<artifactId>bcpkix-jdk14</artifactId>
 			<version>${bouncycastle.bcpkix.version}</version>
 			<optional>true</optional>
 		</dependency>
