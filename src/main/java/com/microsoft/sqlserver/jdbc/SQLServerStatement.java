@@ -1807,18 +1807,21 @@ public class SQLServerStatement implements ISQLServerStatement {
                 // to be made to PreparedStatement batch execution.
 
                 try {
+                    // First time through, execute the entire set of batches and return the first result
                     if (0 == batchNum) {
-                        // First time through, execute the entire set of batches and return the first result
                         executeStatement(new StmtBatchExecCmd(this));
-                    } else {
-                        // Subsequent times through, just get the result from the next batch.
-                        // If there are not enough results (update counts) to satisfy the number of batches,
-                        // then bail, leaving EXECUTE_FAILED in the remaining slots of the update count array.
+                    }
+
+                    /*
+                     * Subsequent times through, just get the result from the next batch. If there are not enough
+                     * results (update counts) to satisfy the number of batches, then bail, leaving EXECUTE_FAILED in
+                     * the remaining slots of the update count array. Also get result if only 1 batch
+                     */
+                    if (batchNum > 0 || 1 == batchSize) {
                         startResults();
                         if (!getNextResult(true))
                             break;
                     }
-
                     if (null != resultSet) {
                         SQLServerException.makeFromDriverError(connection, this,
                                 SQLServerException.getErrString("R_resultsetGeneratedForUpdate"), null, true);
