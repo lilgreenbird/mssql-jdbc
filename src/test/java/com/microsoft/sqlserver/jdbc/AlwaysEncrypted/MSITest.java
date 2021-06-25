@@ -17,6 +17,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
 
+import com.microsoft.sqlserver.jdbc.SQLServerColumnEncryptionAzureKeyVaultProvider;
+import com.microsoft.sqlserver.jdbc.SQLServerColumnEncryptionJavaKeyStoreProvider;
+import com.microsoft.sqlserver.jdbc.SQLServerColumnEncryptionKeyStoreProvider;
 import com.microsoft.sqlserver.jdbc.SQLServerConnection;
 import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
 import com.microsoft.sqlserver.jdbc.SQLServerPreparedStatement;
@@ -44,10 +47,6 @@ public class MSITest extends AESetup {
     @Tag(Constants.xSQLv15)
     @Test
     public void testMSIAuth() throws SQLException {
-        // unregister the custom providers registered in AESetup
-        SQLServerConnection.unregisterColumnEncryptionKeyStoreProviders();
-        SQLServerConnection.registerColumnEncryptionKeyStoreProviders(map);
-
         String connStr = connectionString;
         connStr = TestUtils.addOrOverrideProperty(connStr, Constants.USER, "");
         connStr = TestUtils.addOrOverrideProperty(connStr, Constants.PASSWORD, "");
@@ -66,10 +65,6 @@ public class MSITest extends AESetup {
     @Tag(Constants.xSQLv15)
     @Test
     public void testMSIAuthWithMSIClientId() throws SQLException {
-        // unregister the custom providers registered in AESetup
-        SQLServerConnection.unregisterColumnEncryptionKeyStoreProviders();
-        SQLServerConnection.registerColumnEncryptionKeyStoreProviders(map);
-
         String connStr = connectionString;
         connStr = TestUtils.addOrOverrideProperty(connStr, Constants.USER, "");
         connStr = TestUtils.addOrOverrideProperty(connStr, Constants.PASSWORD, "");
@@ -89,10 +84,6 @@ public class MSITest extends AESetup {
     @Tag(Constants.xSQLv15)
     @Test
     public void testDSMSIAuth() throws SQLException {
-        // unregister the custom providers registered in AESetup
-        SQLServerConnection.unregisterColumnEncryptionKeyStoreProviders();
-        SQLServerConnection.registerColumnEncryptionKeyStoreProviders(map);
-
         String connStr = connectionString;
         connStr = TestUtils.addOrOverrideProperty(connStr, Constants.USER, "");
         connStr = TestUtils.addOrOverrideProperty(connStr, Constants.PASSWORD, "");
@@ -114,10 +105,6 @@ public class MSITest extends AESetup {
     @Tag(Constants.xSQLv15)
     @Test
     public void testDSMSIAuthWithMSIClientId() throws SQLException {
-        // unregister the custom providers registered in AESetup
-        SQLServerConnection.unregisterColumnEncryptionKeyStoreProviders();
-        SQLServerConnection.registerColumnEncryptionKeyStoreProviders(map);
-
         String connStr = connectionString;
         connStr = TestUtils.addOrOverrideProperty(connStr, Constants.USER, "");
         connStr = TestUtils.addOrOverrideProperty(connStr, Constants.PASSWORD, "");
@@ -137,10 +124,6 @@ public class MSITest extends AESetup {
      */
     @Test
     public void testDSAkvWithMSI() throws SQLException {
-        // unregister the custom providers registered in AESetup
-        SQLServerConnection.unregisterColumnEncryptionKeyStoreProviders();
-        SQLServerConnection.registerColumnEncryptionKeyStoreProviders(map);
-
         String connStr = AETestConnectionString;
         connStr = TestUtils.addOrOverrideProperty(connStr, Constants.KEYSTORE_AUTHENTICATION,
                 "KeyVaultManagedIdentity");
@@ -154,10 +137,6 @@ public class MSITest extends AESetup {
      */
     @Test
     public void testCharAkvWithCred() throws SQLException {
-        // unregister the custom providers registered in AESetup
-        SQLServerConnection.unregisterColumnEncryptionKeyStoreProviders();
-        SQLServerConnection.registerColumnEncryptionKeyStoreProviders(map);
-
         // add credentials to connection string
         String connStr = AETestConnectionString;
         connStr = TestUtils.addOrOverrideProperty(connStr, Constants.KEYSTORE_AUTHENTICATION, "KeyVaultClientSecret");
@@ -171,10 +150,6 @@ public class MSITest extends AESetup {
      */
     @Test
     public void testCharAkvWithCredDeprecated() throws SQLException {
-        // unregister the custom providers registered in AESetup
-        SQLServerConnection.unregisterColumnEncryptionKeyStoreProviders();
-        SQLServerConnection.registerColumnEncryptionKeyStoreProviders(map);
-
         // add deprecated connection properties
         String connStr = AETestConnectionString;
         connStr = TestUtils.addOrOverrideProperty(connStr, Constants.KEYVAULTPROVIDER_CLIENTID, keyStorePrincipalId);
@@ -187,10 +162,6 @@ public class MSITest extends AESetup {
      */
     @Test
     public void testCharAkvWithMSI() throws SQLException {
-        // unregister the custom providers registered in AESetup
-        SQLServerConnection.unregisterColumnEncryptionKeyStoreProviders();
-        SQLServerConnection.registerColumnEncryptionKeyStoreProviders(map);
-
         // set to use Managed Identity for keystore auth
         String connStr = AETestConnectionString;
         connStr = TestUtils.addOrOverrideProperty(connStr, Constants.KEYSTORE_AUTHENTICATION,
@@ -203,10 +174,6 @@ public class MSITest extends AESetup {
      */
     @Test
     public void testCharAkvWithMSIandPrincipalId() throws SQLException {
-        // unregister the custom providers registered in AESetup
-        SQLServerConnection.unregisterColumnEncryptionKeyStoreProviders();
-        SQLServerConnection.registerColumnEncryptionKeyStoreProviders(map);
-
         // set to use Managed Identity for keystore auth and principal id
         String connStr = AETestConnectionString;
         connStr = TestUtils.addOrOverrideProperty(connStr, Constants.KEYSTORE_AUTHENTICATION,
@@ -220,10 +187,6 @@ public class MSITest extends AESetup {
      */
     @Test
     public void testNumericAkvMissingCred() throws SQLException {
-        // unregister the custom providers registered in AESetup
-        SQLServerConnection.unregisterColumnEncryptionKeyStoreProviders();
-        SQLServerConnection.registerColumnEncryptionKeyStoreProviders(map);
-
         // set auth type to key vault client secret but do not provide secret
         String connStr = AETestConnectionString;
         connStr = TestUtils.addOrOverrideProperty(connStr, Constants.KEYSTORE_AUTHENTICATION, "KeyVaultClientSecret");
@@ -240,10 +203,6 @@ public class MSITest extends AESetup {
      */
     @Test
     public void testNumericAkvSecretNoAuth() throws SQLException {
-        // unregister the custom providers registered in AESetup
-        SQLServerConnection.unregisterColumnEncryptionKeyStoreProviders();
-        SQLServerConnection.registerColumnEncryptionKeyStoreProviders(map);
-
         // set key store secret but do not specify authentication type
         String connStr = AETestConnectionString;
         connStr = TestUtils.addOrOverrideProperty(connStr, Constants.KEYSTORE_SECRET, keyStoreSecret);
@@ -261,10 +220,6 @@ public class MSITest extends AESetup {
      */
     @Test
     public void testNumericAkvPrincipalIdNoAuth() throws SQLException {
-        // unregister the custom providers registered in AESetup
-        SQLServerConnection.unregisterColumnEncryptionKeyStoreProviders();
-        SQLServerConnection.registerColumnEncryptionKeyStoreProviders(map);
-
         // set principal id but do not specify authentication type
         String connStr = AETestConnectionString;
         connStr = TestUtils.addOrOverrideProperty(connStr, Constants.KEYSTORE_PRINCIPALID, keyStorePrincipalId);
@@ -282,10 +237,6 @@ public class MSITest extends AESetup {
      */
     @Test
     public void testNumericAkvLocationNoAuth() throws SQLException {
-        // unregister the custom providers registered in AESetup
-        SQLServerConnection.unregisterColumnEncryptionKeyStoreProviders();
-        SQLServerConnection.registerColumnEncryptionKeyStoreProviders(map);
-
         // set key store location but do not specify authentication type
         String connStr = AETestConnectionString;
         connStr = TestUtils.addOrOverrideProperty(connStr, Constants.KEYSTORE_LOCATION, "location");
@@ -305,15 +256,12 @@ public class MSITest extends AESetup {
     public void testNumericAkvWithBadCred() throws SQLException {
         // unregister the custom providers registered in AESetup
         SQLServerConnection.unregisterColumnEncryptionKeyStoreProviders();
+        akvProvider = new SQLServerColumnEncryptionAzureKeyVaultProvider("bad", "bad");
+        map.put(Constants.AZURE_KEY_VAULT_NAME, akvProvider);
         SQLServerConnection.registerColumnEncryptionKeyStoreProviders(map);
 
-        // add credentials to connection string
-        String connStr = AETestConnectionString;
-        connStr = TestUtils.addOrOverrideProperty(connStr, Constants.KEYSTORE_AUTHENTICATION, "KeyVaultClientSecret");
-        connStr = TestUtils.addOrOverrideProperty(connStr, Constants.KEYSTORE_PRINCIPALID, "bad");
-        connStr = TestUtils.addOrOverrideProperty(connStr, Constants.KEYSTORE_SECRET, "bad");
         try {
-            testNumericAKV(connStr);
+            testNumericAKV(AETestConnectionString);
             fail(TestResource.getResource("R_expectedFailPassed"));
         } catch (Exception e) {
             // https://docs.microsoft.com/en-us/azure/active-directory/develop/reference-aadsts-error-codes
@@ -326,10 +274,6 @@ public class MSITest extends AESetup {
      */
     @Test
     public void testNumericAkvWithCred() throws SQLException {
-        // unregister the custom providers registered in AESetup
-        SQLServerConnection.unregisterColumnEncryptionKeyStoreProviders();
-        SQLServerConnection.registerColumnEncryptionKeyStoreProviders(map);
-
         // add credentials to connection string
         String connStr = AETestConnectionString;
         connStr = TestUtils.addOrOverrideProperty(connStr, Constants.KEYSTORE_AUTHENTICATION, "KeyVaultClientSecret");
@@ -343,10 +287,6 @@ public class MSITest extends AESetup {
      */
     @Test
     public void testNumericAkvWithMSI() throws SQLException {
-        // unregister the custom providers registered in AESetup
-        SQLServerConnection.unregisterColumnEncryptionKeyStoreProviders();
-        SQLServerConnection.registerColumnEncryptionKeyStoreProviders(map);
-
         // set to use Managed Identity for keystore auth
         String connStr = AETestConnectionString;
         connStr = TestUtils.addOrOverrideProperty(connStr, Constants.KEYSTORE_AUTHENTICATION,
@@ -359,10 +299,6 @@ public class MSITest extends AESetup {
      */
     @Test
     public void testNumericAkvWithMSIandPrincipalId() throws SQLException {
-        // unregister the custom providers registered in AESetup
-        SQLServerConnection.unregisterColumnEncryptionKeyStoreProviders();
-        SQLServerConnection.registerColumnEncryptionKeyStoreProviders(map);
-
         // set to use Managed Identity for keystore auth and principal id
         String connStr = AETestConnectionString;
         connStr = TestUtils.addOrOverrideProperty(connStr, Constants.KEYSTORE_AUTHENTICATION,
