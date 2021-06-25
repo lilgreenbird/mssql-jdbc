@@ -27,6 +27,7 @@ import com.microsoft.sqlserver.jdbc.SQLServerResultSet;
 import com.microsoft.sqlserver.jdbc.SQLServerStatement;
 import com.microsoft.sqlserver.jdbc.TestResource;
 import com.microsoft.sqlserver.jdbc.TestUtils;
+import com.microsoft.sqlserver.jdbc.AlwaysEncrypted.AESetup.ColumnType;
 import com.microsoft.sqlserver.testframework.AbstractTest;
 import com.microsoft.sqlserver.testframework.Constants;
 import com.microsoft.sqlserver.testframework.PrepUtil;
@@ -255,13 +256,18 @@ public class MSITest extends AESetup {
     @Test
     public void testNumericAkvWithBadCred() throws SQLException {
         // unregister the custom providers registered in AESetup
-        SQLServerConnection.unregisterColumnEncryptionKeyStoreProviders();
-        akvProvider = new SQLServerColumnEncryptionAzureKeyVaultProvider("bad", "bad");
-        map.put(Constants.AZURE_KEY_VAULT_NAME, akvProvider);
-        SQLServerConnection.registerColumnEncryptionKeyStoreProviders(map);
-
+        /*
+         * SQLServerConnection.unregisterColumnEncryptionKeyStoreProviders(); akvProvider = new
+         * SQLServerColumnEncryptionAzureKeyVaultProvider("bad", "bad"); map.put(Constants.AZURE_KEY_VAULT_NAME,
+         * akvProvider); SQLServerConnection.registerColumnEncryptionKeyStoreProviders(map);
+         */
+        // add credentials to connection string
+        String connStr = AETestConnectionString;
+        connStr = TestUtils.addOrOverrideProperty(connStr, Constants.KEYSTORE_AUTHENTICATION, "KeyVaultClientSecret");
+        connStr = TestUtils.addOrOverrideProperty(connStr, Constants.KEYSTORE_PRINCIPALID, "bad");
+        connStr = TestUtils.addOrOverrideProperty(connStr, Constants.KEYSTORE_SECRET, "bad");
         try {
-            testNumericAKV(AETestConnectionString);
+            testNumericAKV(connStr);
             fail(TestResource.getResource("R_expectedFailPassed"));
         } catch (Exception e) {
             // https://docs.microsoft.com/en-us/azure/active-directory/develop/reference-aadsts-error-codes
@@ -307,6 +313,27 @@ public class MSITest extends AESetup {
         testNumericAKV(connStr);
     }
 
+    protected static void createTable(String connStr, String tableName, String cekName,
+            String table[][]) throws SQLException {
+        try (SQLServerConnection con = (SQLServerConnection) PrepUtil.getConnection(connStr);
+                SQLServerStatement stmt = (SQLServerStatement) con.createStatement()) {
+            String sql = "";
+            for (int i = 0; i < table.length; i++) {
+                sql += ColumnType.PLAIN.name() + table[i][0] + " " + table[i][1] + " NULL,";
+                sql += ColumnType.DETERMINISTIC.name() + table[i][0] + " " + table[i][1]
+                        + String.format(encryptSql, ColumnType.DETERMINISTIC.name(), cekName) + ") NULL,";
+                sql += ColumnType.RANDOMIZED.name() + table[i][0] + " " + table[i][1]
+                        + String.format(encryptSql, ColumnType.RANDOMIZED.name(), cekName) + ") NULL,";
+            }
+            TestUtils.dropTableIfExists(tableName, stmt);
+            sql = String.format(createSql, tableName, sql);
+            stmt.execute(sql);
+            stmt.execute("DBCC FREEPROCCACHE");
+        } catch (SQLException e) {
+            fail(e.getMessage());
+        }
+    }
+
     private void testCharAkv(String connStr) throws SQLException {
         String sql = "select * from " + CHAR_TABLE_AE;
         try (SQLServerConnection con = PrepUtil.getConnection(connStr);
@@ -314,7 +341,7 @@ public class MSITest extends AESetup {
                 SQLServerPreparedStatement pstmt = (SQLServerPreparedStatement) TestUtils.getPreparedStmt(con, sql,
                         stmtColEncSetting)) {
             TestUtils.dropTableIfExists(CHAR_TABLE_AE, stmt);
-            createTable(CHAR_TABLE_AE, cekAkv, charTable);
+            createTable(connStr, CHAR_TABLE_AE, cekAkv, charTable);
             String[] values = createCharValues(false);
             populateCharNormalCase(values);
 
@@ -335,7 +362,7 @@ public class MSITest extends AESetup {
                 SQLServerPreparedStatement pstmt = (SQLServerPreparedStatement) TestUtils.getPreparedStmt(con, sql,
                         stmtColEncSetting)) {
             TestUtils.dropTableIfExists(NUMERIC_TABLE_AE, stmt);
-            createTable(NUMERIC_TABLE_AE, cekAkv, numericTable);
+            createTable(connStr, NUMERIC_TABLE_AE, cekAkv, numericTable);
             String[] values = createNumericValues(false);
             populateNumeric(values);
 
