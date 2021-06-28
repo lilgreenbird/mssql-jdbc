@@ -39,6 +39,7 @@ import com.microsoft.sqlserver.jdbc.SQLServerStatement;
 import com.microsoft.sqlserver.jdbc.SQLServerStatementColumnEncryptionSetting;
 import com.microsoft.sqlserver.jdbc.TestResource;
 import com.microsoft.sqlserver.jdbc.TestUtils;
+import com.microsoft.sqlserver.jdbc.AlwaysEncrypted.AESetup.ColumnType;
 import com.microsoft.sqlserver.testframework.AbstractSQLGenerator;
 import com.microsoft.sqlserver.testframework.AbstractTest;
 import com.microsoft.sqlserver.testframework.Constants;
@@ -312,6 +313,38 @@ public class AESetup extends AbstractTest {
      */
     protected static void createTable(String tableName, String cekName, String table[][]) throws SQLException {
         try (SQLServerConnection con = (SQLServerConnection) PrepUtil.getConnection(AETestConnectionString, AEInfo);
+                SQLServerStatement stmt = (SQLServerStatement) con.createStatement()) {
+            String sql = "";
+            for (int i = 0; i < table.length; i++) {
+                sql += ColumnType.PLAIN.name() + table[i][0] + " " + table[i][1] + " NULL,";
+                sql += ColumnType.DETERMINISTIC.name() + table[i][0] + " " + table[i][1]
+                        + String.format(encryptSql, ColumnType.DETERMINISTIC.name(), cekName) + ") NULL,";
+                sql += ColumnType.RANDOMIZED.name() + table[i][0] + " " + table[i][1]
+                        + String.format(encryptSql, ColumnType.RANDOMIZED.name(), cekName) + ") NULL,";
+            }
+            TestUtils.dropTableIfExists(tableName, stmt);
+            sql = String.format(createSql, tableName, sql);
+            stmt.execute(sql);
+            stmt.execute("DBCC FREEPROCCACHE");
+        } catch (SQLException e) {
+            fail(e.getMessage());
+        }
+    }
+
+    /**
+     * Create AE test tables with provided connection string
+     * 
+     * @param connStr
+     *        connection string
+     * @param tableName
+     *        name of test table
+     * @param table
+     *        2d array containing table column definitions
+     * @throws SQLException
+     */
+    protected static void createTable(String connStr, String tableName, String cekName,
+            String table[][]) throws SQLException {
+        try (SQLServerConnection con = (SQLServerConnection) PrepUtil.getConnection(connStr);
                 SQLServerStatement stmt = (SQLServerStatement) con.createStatement()) {
             String sql = "";
             for (int i = 0; i < table.length; i++) {
@@ -1292,6 +1325,117 @@ public class AESetup extends AbstractTest {
                 + "?,?,?," + "?,?,?," + "?,?,?" + ")";
 
         try (SQLServerConnection con = (SQLServerConnection) PrepUtil.getConnection(AETestConnectionString, AEInfo);
+                SQLServerPreparedStatement pstmt = (SQLServerPreparedStatement) TestUtils.getPreparedStmt(con, sql,
+                        stmtColEncSetting)) {
+
+            // bit
+            for (int i = 1; i <= 3; i++) {
+                if (values[0].equalsIgnoreCase(Boolean.TRUE.toString())) {
+                    pstmt.setBoolean(i, true);
+                } else {
+                    pstmt.setBoolean(i, false);
+                }
+            }
+
+            // tinyint
+            for (int i = 4; i <= 6; i++) {
+                pstmt.setShort(i, Short.valueOf(values[1]));
+            }
+
+            // smallint
+            for (int i = 7; i <= 9; i++) {
+                pstmt.setShort(i, Short.valueOf(values[2]));
+            }
+
+            // int
+            for (int i = 10; i <= 12; i++) {
+                pstmt.setInt(i, Integer.valueOf(values[3]));
+            }
+
+            // bigint
+            for (int i = 13; i <= 15; i++) {
+                pstmt.setLong(i, Long.valueOf(values[4]));
+            }
+
+            // float default
+            for (int i = 16; i <= 18; i++) {
+                pstmt.setDouble(i, Double.valueOf(values[5]));
+            }
+
+            // float(30)
+            for (int i = 19; i <= 21; i++) {
+                pstmt.setDouble(i, Double.valueOf(values[6]));
+            }
+
+            // real
+            for (int i = 22; i <= 24; i++) {
+                pstmt.setFloat(i, Float.valueOf(values[7]));
+            }
+
+            // decimal default
+            for (int i = 25; i <= 27; i++) {
+                if (values[8].equalsIgnoreCase("0"))
+                    pstmt.setBigDecimal(i, new BigDecimal(values[8]), 18, 0);
+                else
+                    pstmt.setBigDecimal(i, new BigDecimal(values[8]));
+            }
+
+            // decimal(10,5)
+            for (int i = 28; i <= 30; i++) {
+                pstmt.setBigDecimal(i, new BigDecimal(values[9]), 10, 5);
+            }
+
+            // numeric
+            for (int i = 31; i <= 33; i++) {
+                if (values[10].equalsIgnoreCase("0"))
+                    pstmt.setBigDecimal(i, new BigDecimal(values[10]), 18, 0);
+                else
+                    pstmt.setBigDecimal(i, new BigDecimal(values[10]));
+            }
+
+            // numeric(8,2)
+            for (int i = 34; i <= 36; i++) {
+                pstmt.setBigDecimal(i, new BigDecimal(values[11]), 8, 2);
+            }
+
+            // small money
+            for (int i = 37; i <= 39; i++) {
+                pstmt.setSmallMoney(i, new BigDecimal(values[12]));
+            }
+
+            // money
+            for (int i = 40; i <= 42; i++) {
+                pstmt.setMoney(i, new BigDecimal(values[13]));
+            }
+
+            // decimal(28,4)
+            for (int i = 43; i <= 45; i++) {
+                pstmt.setBigDecimal(i, new BigDecimal(values[14]), 28, 4);
+            }
+
+            // numeric(28,4)
+            for (int i = 46; i <= 48; i++) {
+                pstmt.setBigDecimal(i, new BigDecimal(values[15]), 28, 4);
+            }
+
+            pstmt.execute();
+        }
+    }
+
+    /**
+     * Populating the table with provided connection string
+     * 
+     * @param connStr
+     *        connection string
+     * @param values
+     * @throws SQLException
+     */
+    protected static void populateNumeric(String connStr, String[] values) throws SQLException {
+        String sql = "insert into " + NUMERIC_TABLE_AE + " values( " + "?,?,?," + "?,?,?," + "?,?,?," + "?,?,?,"
+                + "?,?,?," + "?,?,?," + "?,?,?," + "?,?,?," + "?,?,?," + "?,?,?," + "?,?,?," + "?,?,?," + "?,?,?,"
+                + "?,?,?," + "?,?,?," + "?,?,?" + ")";
+
+        try (SQLServerConnection con = (SQLServerConnection) PrepUtil.getConnection(connStr);
                 SQLServerPreparedStatement pstmt = (SQLServerPreparedStatement) TestUtils.getPreparedStmt(con, sql,
                         stmtColEncSetting)) {
 
