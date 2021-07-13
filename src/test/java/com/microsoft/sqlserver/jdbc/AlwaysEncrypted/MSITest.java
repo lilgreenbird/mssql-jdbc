@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -355,7 +354,7 @@ public class MSITest extends AESetup {
         }
     }
 
-  //  @BeforeEach
+    @BeforeEach
     public void registerAKVProvder() throws Exception {
         // unregister the custom providers registered in AESetup
         SQLServerConnection.unregisterColumnEncryptionKeyStoreProviders();
