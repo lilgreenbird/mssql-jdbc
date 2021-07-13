@@ -354,4 +354,32 @@ public class MSITest extends AESetup {
             }
         }
     }
+
+  //  @BeforeEach
+    public void registerAKVProvder() throws Exception {
+        // unregister the custom providers registered in AESetup
+        SQLServerConnection.unregisterColumnEncryptionKeyStoreProviders();
+
+        Map<String, SQLServerColumnEncryptionKeyStoreProvider> map = new HashMap<String, SQLServerColumnEncryptionKeyStoreProvider>();
+        if (null == akvProvider && null != applicationClientID && null != applicationKey) {
+            File file = null;
+            try {
+                file = new File(Constants.MSSQL_JDBC_PROPERTIES);
+                try (OutputStream os = new FileOutputStream(file);) {
+                    Properties props = new Properties();
+                    // Append to the list of hardcoded endpoints.
+                    props.setProperty(Constants.AKV_TRUSTED_ENDPOINTS_KEYWORD, ";vault.azure.net");
+                    props.store(os, "");
+                }
+                akvProvider = new SQLServerColumnEncryptionAzureKeyVaultProvider(applicationClientID, applicationKey);
+                map.put(Constants.AZURE_KEY_VAULT_NAME, akvProvider);
+            } finally {
+                if (null != file) {
+                    file.delete();
+                }
+            }
+        }
+
+        SQLServerConnection.registerColumnEncryptionKeyStoreProviders(map);
+    }
 }
