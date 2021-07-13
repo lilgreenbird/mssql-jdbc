@@ -46,8 +46,11 @@ public class SSLProtocolTest extends AbstractTest {
             // Example, if the highest TLS version enabled in the server is TLSv1.1,
             // the connection will fail if we enable only TLSv1.2
             assertTrue(e.getMessage().contains(TestResource.getResource("R_noProtocolVersion"))
-                    || e.getCause().getMessage().contains(TestResource.getResource("R_connectionClosed"))
-                    || e.getCause().getCause().getMessage().contains(TestResource.getResource("R_connectionClosed")),
+                    || null != e.getCause()
+                                            ? e.getCause().getMessage()
+                                                    .contains(TestResource.getResource("R_connectionClosed"))
+                                            : null != e.getCause().getCause() ? e.getCause().getCause().getMessage()
+                                                    .contains(TestResource.getResource("R_connectionClosed")) : true,
                     e.getMessage());
         }
     }

@@ -355,7 +355,7 @@ public class MSITest extends AESetup {
         }
     }
 
-    @BeforeEach
+  //  @BeforeEach
     public void registerAKVProvder() throws Exception {
         // unregister the custom providers registered in AESetup
         SQLServerConnection.unregisterColumnEncryptionKeyStoreProviders();
