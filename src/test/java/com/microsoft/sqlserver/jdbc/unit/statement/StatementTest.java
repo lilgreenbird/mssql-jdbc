@@ -2081,6 +2081,7 @@ public class StatementTest extends AbstractTest {
                     } catch (SQLException e) {
                         assertEquals(TestResource.getResource("R_statementClosed"), e.getMessage());
                     } catch (Exception e) {
+                        System.out.println("debug");
                         e.printStackTrace();
                         fail(TestResource.getResource("R_unexpectedException") + e.getMessage());
                     }
