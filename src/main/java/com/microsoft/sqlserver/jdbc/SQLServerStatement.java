@@ -74,7 +74,7 @@ public class SQLServerStatement implements ISQLServerStatement {
     }
 
     final static String identityQuery = " select SCOPE_IDENTITY() AS GENERATED_KEYS";
-    
+
     static final String WINDOWS_KEY_STORE_NAME = "MSSQL_CERTIFICATE_STORE";
 
     /** the stored procedure name to call (if there is one) */
@@ -409,6 +409,7 @@ public class SQLServerStatement implements ISQLServerStatement {
 
     class StmtExecOutParamHandler extends TDSTokenHandler {
         SQLServerStatement statement;
+
         StmtExecOutParamHandler(SQLServerStatement statement) {
             super("StmtExecOutParamHandler");
             this.statement = statement;
@@ -1321,7 +1322,14 @@ public class SQLServerStatement implements ISQLServerStatement {
         if (wasExecuted()) {
             processBatch();
             checkClosed(); // processBatch could have resulted in a closed connection if isCloseOnCompletion is set
-            TDSParser.parse(resultsReader(), "batch completion");
+
+            // reader could be null if connection closed
+            TDSReader reader = resultsReader();
+            if (null == reader) {
+                SQLServerException.makeFromDriverError(connection, this,
+                        SQLServerException.getErrString("R_statementIsClosed"), null, false);
+            }
+            TDSParser.parse(reader, "batch completion");
             ensureExecuteResultsReader(null);
         }
     }
@@ -2436,8 +2444,8 @@ public class SQLServerStatement implements ISQLServerStatement {
             }
 
             if (null == entry.getValue()) {
-                throw new SQLServerException(null,
-                        String.format(SQLServerException.getErrString("R_CustomKeyStoreProviderValueNull"), providerName),
+                throw new SQLServerException(null, String
+                        .format(SQLServerException.getErrString("R_CustomKeyStoreProviderValueNull"), providerName),
                         null, 0, false);
             }
 
@@ -2457,15 +2465,16 @@ public class SQLServerStatement implements ISQLServerStatement {
     }
 
     synchronized boolean hasColumnEncryptionKeyStoreProvidersRegistered() {
-        return null != statementColumnEncryptionKeyStoreProviders && statementColumnEncryptionKeyStoreProviders.size() > 0;
+        return null != statementColumnEncryptionKeyStoreProviders
+                && statementColumnEncryptionKeyStoreProviders.size() > 0;
     }
 
     synchronized SQLServerColumnEncryptionKeyStoreProvider getColumnEncryptionKeyStoreProvider(
             String providerName) throws SQLServerException {
 
         // Check for a statement-level provider first
-        if (null != statementColumnEncryptionKeyStoreProviders &&
-                statementColumnEncryptionKeyStoreProviders.size() > 0) {
+        if (null != statementColumnEncryptionKeyStoreProviders
+                && statementColumnEncryptionKeyStoreProviders.size() > 0) {
             // If any statement-level providers are registered, we don't fall back to connection-level providers
             if (statementColumnEncryptionKeyStoreProviders.containsKey(providerName)) {
                 return statementColumnEncryptionKeyStoreProviders.get(providerName);
