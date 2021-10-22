@@ -1319,7 +1319,6 @@ public class SQLServerStatement implements ISQLServerStatement {
     }
 
     final void processExecuteResults() throws SQLServerException {
-        System.out.println("processExecuteResults: checked close");
 
         if (wasExecuted()) {
             processBatch();

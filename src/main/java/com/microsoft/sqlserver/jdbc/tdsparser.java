@@ -62,6 +62,7 @@ final class TDSParser {
             if (null != tdsReader) {
                 tdsTokenType = tdsReader.peekTokenType();
             } else {
+                System.out.println("reader is null");
                 parsing = false;
                 return;
             }
