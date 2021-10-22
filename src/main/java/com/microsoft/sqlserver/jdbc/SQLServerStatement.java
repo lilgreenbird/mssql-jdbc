@@ -1314,18 +1314,16 @@ public class SQLServerStatement implements ISQLServerStatement {
         return updateCount;
     }
 
-    final void ensureExecuteResultsReader(TDSReader tdsReader) {
+    final synchronized void ensureExecuteResultsReader(TDSReader tdsReader) {
         this.tdsReader = tdsReader;
     }
 
     final void processExecuteResults() throws SQLServerException {
         if (wasExecuted()) {
             processBatch();
-            synchronized (this) {
-                checkClosed(); // processBatch could have resulted in a closed connection if isCloseOnCompletion is set
-                TDSParser.parse(resultsReader(), "batch completion");
-                ensureExecuteResultsReader(null);
-            }
+            checkClosed(); // processBatch could have resulted in a closed connection if isCloseOnCompletion is set
+            TDSParser.parse(resultsReader(), "batch completion");
+            ensureExecuteResultsReader(null);
         }
     }
 
