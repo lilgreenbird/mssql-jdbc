@@ -1314,16 +1314,18 @@ public class SQLServerStatement implements ISQLServerStatement {
         return updateCount;
     }
 
-    final synchronized void ensureExecuteResultsReader(TDSReader tdsReader) {
+    final void ensureExecuteResultsReader(TDSReader tdsReader) {
         this.tdsReader = tdsReader;
     }
 
     final void processExecuteResults() throws SQLServerException {
         if (wasExecuted()) {
             processBatch();
-            checkClosed(); // processBatch could have resulted in a closed connection if isCloseOnCompletion is set
-            TDSParser.parse(resultsReader(), "batch completion");
-            ensureExecuteResultsReader(null);
+            synchronized (this) {
+                checkClosed(); // processBatch could have resulted in a closed connection if isCloseOnCompletion is set
+                TDSParser.parse(resultsReader(), "batch completion");
+                ensureExecuteResultsReader(null);
+            }
         }
     }
 
@@ -1663,10 +1665,17 @@ public class SQLServerStatement implements ISQLServerStatement {
         NextResult nextResult = new NextResult();
 
         // Signal to not read all token other than TDS_MSG if reading only warnings
-        TDSParser.parse(resultsReader(), nextResult, !clearFlag);
+        synchronized (this) {
+            TDSReader tdsReader = resultsReader();
+            if (null != tdsReader) {
+                TDSParser.parse(tdsReader, nextResult, !clearFlag);
+            }
+        }
 
         // Check for errors first.
-        if (null != nextResult.getDatabaseError()) {
+        if (null != nextResult.getDatabaseError())
+
+        {
             SQLServerException.makeFromDatabaseError(connection, null, nextResult.getDatabaseError().getErrorMessage(),
                     nextResult.getDatabaseError(), false);
         }
@@ -1719,9 +1728,11 @@ public class SQLServerStatement implements ISQLServerStatement {
      * CallableStatement objects override this method to consume the prepared statement handle as well.
      */
     boolean consumeExecOutParam(TDSReader tdsReader) throws SQLServerException {
-        if (expectCursorOutParams) {
-            TDSParser.parse(tdsReader, new StmtExecOutParamHandler(this));
-            return true;
+        synchronized (this) {
+            if (expectCursorOutParams && null != tdsReader) {
+                TDSParser.parse(tdsReader, new StmtExecOutParamHandler(this));
+                return true;
+            }
         }
 
         return false;
