@@ -1319,6 +1319,7 @@ public class SQLServerStatement implements ISQLServerStatement {
     }
 
     final void processExecuteResults() throws SQLServerException {
+        System.out.println("processExecuteResults");
 
         if (wasExecuted()) {
             processBatch();
