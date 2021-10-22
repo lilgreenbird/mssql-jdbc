@@ -1321,16 +1321,11 @@ public class SQLServerStatement implements ISQLServerStatement {
     final void processExecuteResults() throws SQLServerException {
         if (wasExecuted()) {
             processBatch();
-            checkClosed(); // processBatch could have resulted in a closed connection if isCloseOnCompletion is set
-
-            // reader could be null if connection closed
-            TDSReader reader = resultsReader();
-            if (null == reader) {
-                SQLServerException.makeFromDriverError(connection, this,
-                        SQLServerException.getErrString("R_statementIsClosed"), null, false);
+            synchronized (this) {
+                checkClosed(); // processBatch could have resulted in a closed connection if isCloseOnCompletion is set
+                TDSParser.parse(resultsReader(), "batch completion");
+                ensureExecuteResultsReader(null);
             }
-            TDSParser.parse(reader, "batch completion");
-            ensureExecuteResultsReader(null);
         }
     }
 
