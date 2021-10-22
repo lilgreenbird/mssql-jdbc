@@ -1319,10 +1319,12 @@ public class SQLServerStatement implements ISQLServerStatement {
     }
 
     final void processExecuteResults() throws SQLServerException {
+        System.out.println("processExecuteResults: checked close");
+
         if (wasExecuted()) {
             processBatch();
             checkClosed(); // processBatch could have resulted in a closed connection if isCloseOnCompletion is set
-            System.out.println("processExecuteResults: checked close");
+            System.out.println(" checked close");
             TDSParser.parse(resultsReader(), "batch completion");
             ensureExecuteResultsReader(null);
         }
