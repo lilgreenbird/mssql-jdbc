@@ -57,8 +57,14 @@ final class TDSParser {
         // If TDS_LOGIN_ACK is received verify for TDS_FEATURE_EXTENSION_ACK packet
         boolean isLoginAck = false;
         boolean isFeatureExtAck = false;
-        while (parsing && null != tdsReader) {
-            int tdsTokenType = tdsReader.peekTokenType();
+        while (parsing) {
+            int tdsTokenType;
+            if (null != tdsReader) {
+                tdsTokenType = tdsReader.peekTokenType();
+            } else {
+                parsing = false;
+                return;
+            }
             if (isLogging) {
                 logger.finest(tdsReader.toString() + ": " + tdsTokenHandler.logContext + ": Processing "
                         + ((-1 == tdsTokenType) ? "EOF" : TDS.getTokenName(tdsTokenType)));

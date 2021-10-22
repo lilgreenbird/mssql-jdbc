@@ -1321,11 +1321,9 @@ public class SQLServerStatement implements ISQLServerStatement {
     final void processExecuteResults() throws SQLServerException {
         if (wasExecuted()) {
             processBatch();
-            synchronized (this) {
-                checkClosed(); // processBatch could have resulted in a closed connection if isCloseOnCompletion is set
-                TDSParser.parse(resultsReader(), "batch completion");
-                ensureExecuteResultsReader(null);
-            }
+            checkClosed(); // processBatch could have resulted in a closed connection if isCloseOnCompletion is set
+            TDSParser.parse(resultsReader(), "batch completion");
+            ensureExecuteResultsReader(null);
         }
     }
 
@@ -1665,12 +1663,7 @@ public class SQLServerStatement implements ISQLServerStatement {
         NextResult nextResult = new NextResult();
 
         // Signal to not read all token other than TDS_MSG if reading only warnings
-        synchronized (this) {
-            TDSReader tdsReader = resultsReader();
-            if (null != tdsReader) {
-                TDSParser.parse(tdsReader, nextResult, !clearFlag);
-            }
-        }
+        TDSParser.parse(resultsReader(), nextResult, !clearFlag);
 
         // Check for errors first.
         if (null != nextResult.getDatabaseError())
@@ -1728,11 +1721,9 @@ public class SQLServerStatement implements ISQLServerStatement {
      * CallableStatement objects override this method to consume the prepared statement handle as well.
      */
     boolean consumeExecOutParam(TDSReader tdsReader) throws SQLServerException {
-        synchronized (this) {
-            if (expectCursorOutParams && null != tdsReader) {
-                TDSParser.parse(tdsReader, new StmtExecOutParamHandler(this));
-                return true;
-            }
+        if (expectCursorOutParams) {
+            TDSParser.parse(tdsReader, new StmtExecOutParamHandler(this));
+            return true;
         }
 
         return false;
