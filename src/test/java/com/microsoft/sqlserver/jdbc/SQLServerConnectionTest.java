@@ -591,8 +591,13 @@ public class SQLServerConnectionTest extends AbstractTest {
             conn.close();
 
         } catch (SQLException e) {
-            assertTrue(e.getMessage().indexOf("ClientConnectionId") != -1,
-                    TestResource.getResource("R_unexpectedWrongDB"));
+            assertTrue(
+                    (e.getMessage().indexOf("ClientConnectionId") != -1)
+                            || ((isSqlAzure() || isSqlAzureDW())
+                                                                 ? e.getMessage().contains(
+                                                                         TestResource.getResource("R_connectTimedOut"))
+                                                                 : false),
+                    TestResource.getResource("R_unexpectedWrongDB") + ": " + e.getMessage());
         }
 
         // Non-existent host, ClientConnectionId should not be available in error message
@@ -601,8 +606,13 @@ public class SQLServerConnectionTest extends AbstractTest {
             conn.close();
 
         } catch (SQLException e) {
-            assertEquals(false, e.getMessage().indexOf("ClientConnectionId") != -1,
-                    TestResource.getResource("R_unexpectedWrongHost"));
+            assertTrue(
+                    (!(e.getMessage().indexOf("ClientConnectionId") != -1))
+                            || ((isSqlAzure() || isSqlAzureDW())
+                                                                 ? e.getMessage().contains(
+                                                                         TestResource.getResource("R_connectTimedOut"))
+                                                                 : false),
+                    TestResource.getResource("R_unexpectedWrongHost") + ": " + e.getMessage());
         }
     }
 
