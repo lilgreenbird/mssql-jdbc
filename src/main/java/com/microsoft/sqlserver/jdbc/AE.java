@@ -20,13 +20,13 @@ class EncryptionKeyInfo    {
 encryptedKey = encryptedKeyVal;
                databaseId = dbId; cekId = keyId;
         cekVersion = keyVersion;
-        cekMdVersion = mdVersion;
-        keyPath = keyPathVal;
-        keyStoreName = keyStoreNameVal;
-        algorithmName = algorithmNameVal; }
+    cekMdVersion = mdVersion;
+         keyPath = keyPathVal;
+       keyStoreName = keyStoreNameVal;
+             algorithmName = algorithmNameVal; }
 
     byte[] encryptedKey; // the encrypted "column encryption key"
-    int databaseId;
+   int databaseId;
    int cekId;
 int cekVersion;
     byte[] cekMdVersion;
