@@ -11,8 +11,7 @@ import java.util.List;
 
 
 /**
- * Represents a single encrypted value for a CEK. It contains the encrypted CEK,the store type, name,the key path and
- * encryption algorithm.
+ * Represents a single encrypted value for a CEK. It contains the encrypted CEK,the store type, name,the key path and encryption algorithm.
  */
 class EncryptionKeyInfo    {
     EncryptionKeyInfo(byte[] encryptedKeyVal, int dbId, int keyId, int keyVersion, byte[] mdVersion, String keyPathVal,
