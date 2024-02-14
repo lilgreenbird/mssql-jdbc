@@ -14,29 +14,25 @@ import java.util.List;
  * Represents a single encrypted value for a CEK. It contains the encrypted CEK,the store type, name,the key path and
  * encryption algorithm.
  */
-class EncryptionKeyInfo {
+class EncryptionKeyInfo    {
     EncryptionKeyInfo(byte[] encryptedKeyVal, int dbId, int keyId, int keyVersion, byte[] mdVersion, String keyPathVal,
-            String keyStoreNameVal, String algorithmNameVal) {
-        encryptedKey = encryptedKeyVal;
-        databaseId = dbId;
-        cekId = keyId;
+       String keyStoreNameVal, String algorithmNameVal) {
+encryptedKey = encryptedKeyVal;
+               databaseId = dbId; cekId = keyId;
         cekVersion = keyVersion;
         cekMdVersion = mdVersion;
         keyPath = keyPathVal;
         keyStoreName = keyStoreNameVal;
-        algorithmName = algorithmNameVal;
-    }
+        algorithmName = algorithmNameVal; }
 
     byte[] encryptedKey; // the encrypted "column encryption key"
     int databaseId;
-    int cekId;
-    int cekVersion;
+   int cekId;
+int cekVersion;
     byte[] cekMdVersion;
-    String keyPath;
-    String keyStoreName;
+        String keyPath; String keyStoreName;
     String algorithmName;
-    byte normalizationRuleVersion;
-}
+      byte normalizationRuleVersion;  }
 
 
 /**
