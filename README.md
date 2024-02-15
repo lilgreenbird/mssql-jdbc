@@ -26,6 +26,10 @@ Let us know how you think we're doing.
 |--------------------------|--------------------------|--------------------------|
 | [![Build Status](https://sqlclientdrivers.visualstudio.com/public/_apis/build/status/JDBC/public-mssql-jdbc.windows?branchName=main)](https://sqlclientdrivers.visualstudio.com/public/_build/latest?definitionId=825&branchName=main) | [![Build Status](https://sqlclientdrivers.visualstudio.com/public/_apis/build/status/JDBC/public-mssql-jdbc.linux?branchName=main)](https://sqlclientdrivers.visualstudio.com/public/_build/latest?definitionId=823&branchName=main) | [![Build Status](https://sqlclientdrivers.visualstudio.com/public/_apis/build/status/JDBC/CI-MacOS?branchName=main)](https://sqlclientdrivers.visualstudio.com/public/_build/latest?definitionId=824&branchName=main) |
 
+## Code Coverage
+![Coverage](.github/badges/jacoco.svg)
+[![Coverage](.github/badges/jacoco.svg)](https://sqlclientdrivers.visualstudio.com/mssql-jdbc/_build/results?buildId=80637&view=codecoverage-tab)
+
 ## Announcements
 What's coming next?  We will look into adding a more comprehensive set of tests, improving our javadocs, and start developing the next set of features.
 
