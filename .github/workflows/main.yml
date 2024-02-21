@@ -1,0 +1,31 @@
+name: Codecov
+
+on: 
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Install dependencies
+        run: mvn install -Pjre11 -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+        
+      - name: Run tests
+        env:
+          connectionString: ${{ secrets.MSSQL_JDBC_TEST_CONNECTION_PROPERTIES }}
+        run: mvn -Pjre11 -Dmssql_jdbc_test_connection_properties=$connectionString -DexcludedGroups=xAzureSQLDB,NTLM,xUnix,MSI,reqExternalSetup,clientCertAuth,fedAuth,kerberos,DTC -B test
+
+      - name: Code coverage report
+        run: mvn -Pjre11 jacoco:report
+        
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4-beta
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
