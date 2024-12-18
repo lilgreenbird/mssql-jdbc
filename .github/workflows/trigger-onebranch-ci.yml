@@ -3,6 +3,7 @@ name: CI for Pull Requests
 on:
   pull_request:
     types: [opened, synchronize, reopened]  # Trigger the workflow on PR creation and updates
+workflow_dispatch:  # This allows you to manually trigger the workflow
 
 permissions:
   contents: read
