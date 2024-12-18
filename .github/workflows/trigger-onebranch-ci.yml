@@ -23,7 +23,7 @@ jobs:
           response=$(curl -X POST \
             -H "Authorization: Basic ${{ secrets.AZURE_DEVOPS_TOKEN }}" \
             -d "{\"definition\": {\"id\": \"1548\"}, \"sourceBranch\": \"refs/pull/${{ github.event.pull_request.number }}/merge\"}" \
-            https://sqlclientdrivers.visualstudio.com/mssql-jdbc/_apis/build/builds?api-version=6.0)
+            https://dev.azure.com/SqlClientDrivers/mssql-jdbc/_apis/build/builds?api-version=6.0)
         
           echo "Response: $response"
           
@@ -42,7 +42,7 @@ jobs:
             # Poll the status of the pipeline using the build ID
             status=$(curl -X GET \
               -H "Authorization: Basic ${{ secrets.AZURE_DEVOPS_TOKEN }}" \
-              https://sqlclientdrivers.visualstudio.com/mssql-jdbc/_apis/build/builds/${{ env.BUILD_ID }}?api-version=6.0 \
+              https://dev.azure.com/SqlClientDrivers/mssql-jdbc/_apis/build/builds/${{ env.BUILD_ID }}?api-version=6.0 \
               | jq -r '.status')
 
             # If the pipeline status is completed, break the loop
@@ -60,7 +60,7 @@ jobs:
           # Fetch the final result of the pipeline
           final_result=$(curl -X GET \
             -H "Authorization: Basic ${{ secrets.AZURE_DEVOPS_TOKEN }}" \
-            https://sqlclientdrivers.visualstudio.com/mssql-jdbc/_apis/build/builds/${{ env.BUILD_ID }}?api-version=6.0 \
+            https://dev.azure.com/SqlClientDrivers/mssql-jdbc/_apis/build/builds/${{ env.BUILD_ID }}?api-version=6.0 \
             | jq -r '.result')
           
           echo "Pipeline final result: $final_result"
