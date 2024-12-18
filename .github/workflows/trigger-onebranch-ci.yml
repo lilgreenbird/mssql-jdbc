@@ -17,11 +17,10 @@ jobs:
         id: trigger-pipeline
         run: |
           response=$(curl -X POST \
-            -H "Accept: application/json" \
             -H "Authorization: Basic ${{ secrets.AZURE_DEVOPS_TOKEN }}" \
-            -d "{\"definition\": {\"1548\": \"mssql-jdbc-Official\"}, \"sourceBranch\": \"refs/pull/${{ github.event.pull_request.number }}/merge\"}" \
-            https://sqlclientdrivers.visualstudio.com/mssql-jdbc/_apis/build/builds?api-version=6.0)
-          
+            -d "{\"definition\": {\"id\": \"1548\"}, \"sourceBranch\": \"refs/pull/${{ github.event.pull_request.number }}/merge\"}" \
+            https://dev.azure.com/{organization}/{project}/_apis/build/builds?api-version=6.0)
+        
           echo "Response: $response"
           
           # Extract the build ID from the response
