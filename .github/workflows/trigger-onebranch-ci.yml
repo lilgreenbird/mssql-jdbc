@@ -1,28 +1,69 @@
-name: CI
+name: CI for Pull Requests
 
-# Run this workflow every time a commit gets pushed to main
-# This triggers the ADO OneBranch CI Pipeline
 on:
-  push:
-    branches:
-      - '*'
+  pull_request:
+    types: [opened, synchronize, reopened]  # Trigger the workflow on PR creation and updates
 
 permissions:
   contents: read
 
 jobs:
-    build:
-        name: Call OneBranch ADO Pipeline (CI)
-        runs-on: ubuntu-latest
-        steps:
-        - name: Harden Runner
-          uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
-          with:
-            egress-policy: audit
+  trigger-and-wait:
+    runs-on: ubuntu-latest
 
-        - name: Azure Pipelines Action
-          uses: Azure/pipelines@354dddefceb0b503a61338ca81e4091eae3bc84f # v1
-          with:
-            azure-devops-project-url: https://sqlclientdrivers.visualstudio.com/mssql-jdbc
-            azure-pipeline-name: 'mssql-jdbc-Official'
-            azure-devops-token: ${{ secrets.AZURE_DEVOPS_TOKEN }}
+    steps:
+      # Step 1: Trigger the Azure DevOps Pipeline
+      - name: Trigger Azure DevOps Pipeline
+        id: trigger-pipeline
+        run: |
+          response=$(curl -X POST \
+            -H "Accept: application/json" \
+            -H "Authorization: Basic ${{ secrets.AZURE_DEVOPS_TOKEN }}" \
+            -d "{\"definition\": {\"1548\": \"mssql-jdbc-Official\"}, \"sourceBranch\": \"refs/pull/${{ github.event.pull_request.number }}/merge\"}" \
+            https://sqlclientdrivers.visualstudio.com/mssql-jdbc/_apis/build/builds?api-version=6.0)
+          
+          echo "Response: $response"
+          
+          # Extract the build ID from the response
+          build_id=$(echo "$response" | jq -r '.id')
+          echo "Triggered Build ID: $build_id"
+          
+          # Set the build ID as an environment variable for later steps
+          echo "BUILD_ID=$build_id" >> $GITHUB_ENV
+
+      # Step 2: Poll the Azure DevOps Pipeline until it finishes
+      - name: Wait for Azure DevOps Pipeline to Finish
+        id: wait-for-pipeline
+        run: |
+          while true; do
+            # Poll the status of the pipeline using the build ID
+            status=$(curl -X GET \
+              -H "Authorization: Basic ${{ secrets.AZURE_DEVOPS_TOKEN }}" \
+              https://sqlclientdrivers.visualstudio.com/mssql-jdbc/_apis/build/builds/${{ env.BUILD_ID }}?api-version=6.0 \
+              | jq -r '.status')
+
+            # If the pipeline status is completed, break the loop
+            if [[ "$status" == "completed" ]]; then
+              echo "Pipeline completed."
+              break
+            fi
+            echo "Waiting for pipeline to finish..."
+            sleep 30  # Wait for 30 seconds before polling again
+          done
+
+      # Step 3: Get the final status of the pipeline and fail the GitHub action if failed
+      - name: Check Azure DevOps Pipeline Result
+        run: |
+          # Fetch the final result of the pipeline
+          final_result=$(curl -X GET \
+            -H "Authorization: Basic ${{ secrets.AZURE_DEVOPS_TOKEN }}" \
+            https://sqlclientdrivers.visualstudio.com/mssql-jdbc/_apis/build/builds/${{ env.BUILD_ID }}?api-version=6.0 \
+            | jq -r '.result')
+          
+          echo "Pipeline final result: $final_result"
+          
+          # If the result is not "succeeded", fail the workflow
+          if [[ "$final_result" != "succeeded" ]]; then
+            echo "Azure DevOps pipeline failed."
+            exit 1  # Fail the GitHub Action if the pipeline failed
+          fi
