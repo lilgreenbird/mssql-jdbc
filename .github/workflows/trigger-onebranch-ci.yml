@@ -21,6 +21,7 @@ jobs:
         id: trigger-pipeline
         run: |
           response=$(curl -L -X POST \
+            -H "Content-Type: application/json" \
             -H "Authorization: Basic ${{ secrets.AZURE_DEVOPS_TOKEN }}" \
             -d "{\"definition\": {\"id\": \"1548\"}, \"sourceBranch\": \"refs/pull/${{ github.event.pull_request.number }}/merge\"}" \
             https://dev.azure.com/SqlClientDrivers/mssql-jdbc/_apis/build/builds?api-version=6.0)
@@ -41,6 +42,7 @@ jobs:
           while true; do
             # Poll the status of the pipeline using the build ID
             status=$(curl -L -X GET \
+              -H "Content-Type: application/json" \
               -H "Authorization: Basic ${{ secrets.AZURE_DEVOPS_TOKEN }}" \
               https://dev.azure.com/SqlClientDrivers/mssql-jdbc/_apis/build/builds/${{ env.BUILD_ID }}?api-version=6.0 \
               | jq -r '.status')
@@ -59,6 +61,7 @@ jobs:
         run: |
           # Fetch the final result of the pipeline
           final_result=$(curl -L -X GET \
+            -H "Content-Type: application/json" \
             -H "Authorization: Basic ${{ secrets.AZURE_DEVOPS_TOKEN }}" \
             https://dev.azure.com/SqlClientDrivers/mssql-jdbc/_apis/build/builds/${{ env.BUILD_ID }}?api-version=6.0 \
             | jq -r '.result')
