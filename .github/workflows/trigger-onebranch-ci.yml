@@ -18,10 +18,9 @@ jobs:
     steps:
       - name: Set up GitHub environment variables
         run: |
-          # Extract the PR number from the GitHub reference (GITHUB_REF)
-          pr_id=$(echo $GITHUB_REF | awk -F'/' '{print $3}')
+          # Extract the PR number from the GitHub event
+          pr_id="${{ github.event.pull_request.number }}"
           echo "PR_ID=$pr_id" >> $GITHUB_ENV
-
       # Step 1: Trigger the Azure DevOps Pipeline
       - name: Trigger Azure DevOps Pipeline
         id: trigger-pipeline
