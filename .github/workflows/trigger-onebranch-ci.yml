@@ -16,6 +16,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Set up GitHub environment variables
+        run: |
+          # Extract the PR number from the GitHub reference (GITHUB_REF)
+          pr_id=$(echo $GITHUB_REF | awk -F'/' '{print $3}')
+          echo "PR_ID=$pr_id" >> $GITHUB_ENV
+
       # Step 1: Trigger the Azure DevOps Pipeline
       - name: Trigger Azure DevOps Pipeline
         id: trigger-pipeline
@@ -23,7 +29,7 @@ jobs:
           response=$(curl -u :${{ secrets.AZURE_DEVOPS_TOKEN }} \
             -X POST \
             -H "Content-Type: application/json" \
-             -d "{\"definition\": {\"id\": \"1548\"}, \"sourceBranch\": \"refs/pull/${{ github.event.pull_request.number }}/merge\"}" \
+             -d "{\"definition\": {\"id\": \"1548\"}, \"sourceBranch\": \"refs/pull/$PR_ID/merge\"}" \
             https://dev.azure.com/SqlClientDrivers/mssql-jdbc/_apis/build/builds?api-version=6.0)
         
           echo "Response: $response"
