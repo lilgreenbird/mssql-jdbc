@@ -31,7 +31,7 @@
 		<url>https://github.com/Microsoft/mssql-jdbc</url>
 	</scm>
 	<properties>
-		<!-- Allowed values for excluded Groups here - - - - - - - - - - - - - -
+		<!-- Allowed values for excluded Groups here - - - - - - - - - -  - - - - - 
 			xJDBC42 - - - - - - For tests not compatible with JDBC 42 Specifications 
 			xGradle - - - - - - For tests not compatible with Gradle Script - - - - - 
 			xSQLv11 - - - - - - For tests not compatible with SQL Server 2012 - - - - 
