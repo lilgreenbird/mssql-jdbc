@@ -20,7 +20,7 @@ jobs:
       - name: Trigger Azure DevOps Pipeline
         id: trigger-pipeline
         run: |
-          response=$(curl -L -X POST \
+          response=$(curl -L -v -X POST \
             -H "Content-Type: application/json" \
             -H "Authorization: Basic ${{ secrets.AZURE_DEVOPS_TOKEN }}" \
              --data-raw "{\"definition\": {\"id\": \"1548\"}, \"sourceBranch\": \"refs/pull/${{ github.event.pull_request.number }}/merge\"}" \
